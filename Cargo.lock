@@ -2119,6 +2119,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "config",
+ "log",
  "once_cell",
  "rust_decimal",
  "serde",
