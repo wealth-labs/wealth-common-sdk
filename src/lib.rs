@@ -1,9 +1,11 @@
 pub mod config;
-pub mod database;
+
 pub mod logger;
 
 #[cfg(feature = "database")]
 pub use sqlx;
+#[cfg(feature = "database")]
+pub mod database;
 
 pub use anyhow;
 pub use chrono;
