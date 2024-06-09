@@ -28,8 +28,18 @@ pub async fn init(conf: &Config, key: Option<&str>) -> Result<()> {
     sqlx::any::install_default_drivers();
 
     let dns = format!(
-        "{}://{}:{}@{}:{}/{}",
-        conf.drive, conf.username, conf.password, conf.hostname, conf.port, conf.database
+        "{}://{}:{}@{}:{}/{}{}",
+        conf.drive,
+        conf.username,
+        conf.password,
+        conf.hostname,
+        conf.port,
+        conf.database,
+        if conf.url.is_empty() {
+            "".to_string()
+        } else {
+            format!("?{}", conf.url)
+        },
     );
 
     let pool = AnyPoolOptions::new()
