@@ -3,4 +3,35 @@ name = "wealth-common-sdk"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+codegen-units = 1
+debug = false
+lto = true
+opt-level = "z"
+panic = 'abort'
+
+
 [dependencies]
+tokio = { version = "1.38.0", features = ["full"] }
+anyhow = { version = "1.0.86", features = ["backtrace"] }
+config = { version = "0.14.0", default-features = false, features = ["toml"] }
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = { version = "1.0.117" }
+tracing = { version = "0.1.40" }
+tracing-subscriber = { version = "0.3.18", features = ["local-time"] }
+tracing-appender = { version = "0.2.3" }
+chrono = { version = "0.4.38", features = ["serde"] }
+time = { version = "0.3.36", features = ["macros"] }
+sqlx = { version = "0.7.4", features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "chrono",
+    "rust_decimal",
+    "all-databases",
+], optional = true }
+once_cell = { version = "1.19.0" }
+rust_decimal = { version = "1.35.0", features = ["serde"] }
+
+[features]
+default = []
+database = ["dep:sqlx"]
