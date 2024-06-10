@@ -2,7 +2,7 @@ use anyhow::Result;
 use once_cell::sync::Lazy;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, time::Duration};
 use tokio::sync::RwLock;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,10 +20,10 @@ pub struct Config {
     pub slow_query: u64,
 }
 
-static INS: Lazy<RwLock<HashMap<String, Arc<DatabaseConnection>>>> =
+static INS: Lazy<RwLock<HashMap<String, DatabaseConnection>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
 
-pub async fn ins(key: Option<&str>) -> Arc<DatabaseConnection> {
+pub async fn ins(key: Option<&str>) -> DatabaseConnection {
     INS.read().await.get(key.unwrap_or("")).cloned().unwrap()
 }
 
@@ -59,7 +59,7 @@ pub async fn init(conf: &Config, key: Option<&str>) -> Result<()> {
 
     INS.write()
         .await
-        .insert(key.unwrap_or("").to_string(), Arc::new(pool));
+        .insert(key.unwrap_or("").to_string(), pool);
 
     Ok(())
 }
