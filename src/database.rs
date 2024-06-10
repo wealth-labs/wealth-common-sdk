@@ -1,11 +1,8 @@
 use anyhow::Result;
 use once_cell::sync::Lazy;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use serde::{Deserialize, Serialize};
-use sqlx::{
-    any::{AnyConnectOptions, AnyPoolOptions},
-    Any, ConnectOptions, Pool,
-};
-use std::{collections::HashMap, str::FromStr, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,15 +20,14 @@ pub struct Config {
     pub slow_query: u64,
 }
 
-static INS: Lazy<RwLock<HashMap<String, Pool<Any>>>> = Lazy::new(|| RwLock::new(HashMap::new()));
+static INS: Lazy<RwLock<HashMap<String, Arc<DatabaseConnection>>>> =
+    Lazy::new(|| RwLock::new(HashMap::new()));
 
-pub async fn ins(key: Option<&str>) -> Pool<Any> {
+pub async fn ins(key: Option<&str>) -> Arc<DatabaseConnection> {
     INS.read().await.get(key.unwrap_or("")).cloned().unwrap()
 }
 
 pub async fn init(conf: &Config, key: Option<&str>) -> Result<()> {
-    sqlx::any::install_default_drivers();
-
     let dns = format!(
         "{}://{}:{}@{}:{}/{}{}",
         conf.drive,
@@ -47,27 +43,23 @@ pub async fn init(conf: &Config, key: Option<&str>) -> Result<()> {
         },
     );
 
-    let mut opts = AnyConnectOptions::from_str(&dns)?;
-
+    let mut opts = ConnectOptions::new(dns);
+    opts.min_connections(conf.min_conn);
+    opts.max_connections(conf.max_conn);
+    opts.sqlx_logging(conf.show_log);
     if conf.show_log {
-        opts = opts.log_statements(log::LevelFilter::Info);
-        opts = opts.log_slow_statements(
+        opts.sqlx_logging_level(log::LevelFilter::Info);
+        opts.sqlx_slow_statements_logging_settings(
             log::LevelFilter::Warn,
             Duration::from_millis(conf.slow_query),
         );
-    } else {
-        opts = opts.disable_statement_logging();
     }
 
-    let pool = AnyPoolOptions::new()
-        .min_connections(conf.min_conn)
-        .max_connections(conf.max_conn)
-        .connect_with(opts)
-        .await?;
+    let pool = Database::connect(opts).await?;
 
     INS.write()
         .await
-        .insert(key.unwrap_or("").to_string(), pool);
+        .insert(key.unwrap_or("").to_string(), Arc::new(pool));
 
     Ok(())
 }

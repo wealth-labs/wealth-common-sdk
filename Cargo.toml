@@ -23,16 +23,13 @@ tracing-appender = { version = "0.2.3" }
 chrono = { version = "0.4.38", features = ["serde"] }
 time = { version = "0.3.36", features = ["macros"] }
 log = { version = "0.4.21", optional = true }
-sqlx = { version = "0.7.4", features = [
-    "runtime-tokio",
-    "tls-rustls",
-    "chrono",
-    "rust_decimal",
-    "all-databases",
-], optional = true }
 once_cell = { version = "1.19.0" }
 rust_decimal = { version = "1.35.0", features = ["serde"] }
+sea-orm = { version = "0.12.15", features = [
+    "runtime-tokio-rustls",
+    "sqlx-all",
+], optional = true }
 
 [features]
 default = []
-database = ["dep:sqlx", "dep:log"]
+database = ["dep:sea-orm", "dep:log"]
