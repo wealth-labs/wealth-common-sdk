@@ -1,6 +1,6 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use tokio::sync::oneshot::channel;
+use tokio::sync::mpsc::{channel, Receiver};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -14,12 +14,12 @@ pub async fn init(
 	register_router: fn(app: axum::Router) -> axum::Router,
 ) -> Result<()> {
 	let app_stop_notice = crate::app::ins().create_app_stop_notice().await;
-	let (app_waiting_send, app_waiting_recv) = channel::<Result<()>>();
+	let (app_waiting_send, app_waiting_recv) = channel::<Result<()>>(1);
 	crate::app::ins().add_app_waiting(&config.name, app_waiting_recv).await;
 	let listen = config.listen.to_owned();
 	tokio::spawn(async move {
 		let result = run(listen, register_router, app_stop_notice).await;
-		app_waiting_send.send(result).ok();
+		app_waiting_send.send(result).await.ok();
 	});
 	Ok(())
 }
@@ -27,14 +27,14 @@ pub async fn init(
 async fn run(
 	listen: String,
 	register_router: fn(app: axum::Router) -> axum::Router,
-	app_stop_notice: tokio::sync::oneshot::Receiver<()>,
+	mut notice: Receiver<()>,
 ) -> Result<()> {
 	let app = axum::Router::new();
 	let app = register_router(app);
 	let listener = tokio::net::TcpListener::bind(listen).await?;
 	axum::serve(listener, app)
 		.with_graceful_shutdown(async move {
-			app_stop_notice.await.ok();
+			notice.recv().await;
 		})
 		.await?;
 	Ok(())

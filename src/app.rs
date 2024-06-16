@@ -2,7 +2,7 @@ use anyhow::Result;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::sync::{
-	oneshot::{channel, Receiver, Sender},
+	mpsc::{channel, Receiver, Sender},
 	Mutex,
 };
 
@@ -12,8 +12,8 @@ static INS: OnceCell<App> = OnceCell::new();
 pub struct App {
 	app_waiting: Arc<Mutex<Vec<(String, Receiver<Result<()>>)>>>,
 	app_stop_notice: Arc<Mutex<Vec<Sender<()>>>>,
-	stop_send: Arc<tokio::sync::mpsc::Sender<()>>,
-	stop_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<()>>>,
+	stop_send: Arc<Sender<()>>,
+	stop_recv: Arc<Mutex<Receiver<()>>>,
 }
 
 pub fn init() {
@@ -29,23 +29,10 @@ impl App {
 		let (stop_send, stop_recv) = tokio::sync::mpsc::channel::<()>(1);
 		let stop_send = Arc::new(stop_send);
 
-		#[cfg(not(unix))]
 		{
 			let stop_send = stop_send.clone();
 			tokio::spawn(async move {
 				tokio::signal::ctrl_c().await.ok();
-				stop_send.send(()).await.ok();
-			});
-		}
-
-		#[cfg(unix)]
-		{
-			let stop_send = stop_send.clone();
-			tokio::spawn(async move {
-				let mut sigterm =
-					tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-						.unwrap();
-				sigterm.recv().await;
 				stop_send.send(()).await.ok();
 			});
 		}
@@ -60,7 +47,7 @@ impl App {
 	}
 
 	pub async fn create_app_stop_notice(&self) -> Receiver<()> {
-		let (tx, rx) = channel::<()>();
+		let (tx, rx) = channel::<()>(1);
 		self.app_stop_notice.lock().await.push(tx);
 		rx
 	}
@@ -78,19 +65,19 @@ impl App {
 		tracing::info!("application running .....");
 		self.stop_recv.lock().await.recv().await;
 		tracing::info!("application stopping .....");
-		let mut stop_notices = self.app_stop_notice.lock().await;
-		for stop_notice in stop_notices.iter_mut() {
-			stop_notice.closed().await;
+		let mut app_stop_notice = self.app_stop_notice.lock().await;
+		for notice in app_stop_notice.iter_mut() {
+			notice.send(()).await.ok();
 		}
-		let mut stop_waiting_singals = self.app_waiting.lock().await;
-		for (name, stop_waiting_singal) in stop_waiting_singals.iter_mut() {
+		let mut app_waiting = self.app_waiting.lock().await;
+		for (name, signal) in app_waiting.iter_mut() {
 			tracing::info!("application stopping({}) .....", name);
-			let msg = match stop_waiting_singal.await {
-				Ok(msg) => match msg {
+			let msg = match signal.recv().await {
+				Some(msg) => match msg {
 					Ok(_) => "OK".to_owned(),
 					Err(err) => err.to_string(),
 				},
-				Err(err) => err.to_string(),
+				None => "OK".to_owned(),
 			};
 			tracing::info!("application stopped({}) : {}", name, msg);
 		}
