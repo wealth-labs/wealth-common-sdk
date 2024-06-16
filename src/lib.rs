@@ -7,6 +7,7 @@ pub mod database;
 pub use sea_orm;
 
 pub use anyhow;
+pub use async_trait;
 pub use chrono;
 pub use once_cell;
 pub use rust_decimal;

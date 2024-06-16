@@ -29,7 +29,7 @@ sea-orm = { version = "0.12.15", features = [
     "runtime-tokio-rustls",
     "sqlx-all",
 ], optional = true }
-
+async-trait = { version = "0.1.80" }
 [features]
 default = []
 database = ["dep:sea-orm", "dep:log"]
