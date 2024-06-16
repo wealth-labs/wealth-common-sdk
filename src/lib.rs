@@ -1,5 +1,4 @@
 pub mod app;
-pub mod code;
 pub mod config;
 pub mod logger;
 
