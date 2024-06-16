@@ -3,6 +3,7 @@ name = "wealth-common-sdk"
 version = "0.1.0"
 edition = "2021"
 
+
 [profile.release]
 codegen-units = 1
 debug = false
@@ -30,6 +31,15 @@ sea-orm = { version = "0.12.15", features = [
     "sqlx-all",
 ], optional = true }
 async-trait = { version = "0.1.80" }
+reqwest = { version = "0.12.4", default-features = false, features = [
+    "json",
+    "rustls-tls",
+    "charset",
+    "http2",
+    "macos-system-configuration",
+] }
+
+
 [features]
 default = []
 database = ["dep:sea-orm", "dep:log"]
