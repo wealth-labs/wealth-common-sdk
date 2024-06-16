@@ -1,3 +1,4 @@
+pub mod app;
 pub mod config;
 pub mod logger;
 
@@ -9,6 +10,8 @@ pub mod database;
 #[cfg(feature = "database")]
 pub use sea_orm;
 
+#[cfg(feature = "web")]
+pub mod web;
 #[cfg(feature = "web")]
 pub use axum;
 
