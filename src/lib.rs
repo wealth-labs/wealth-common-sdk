@@ -9,6 +9,7 @@ pub mod logger;
 pub use anyhow;
 pub use async_trait;
 pub use chrono;
+pub use nu_ansi_term;
 pub use once_cell;
 pub use reqwest;
 pub use rust_decimal;
