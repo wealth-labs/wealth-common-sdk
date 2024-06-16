@@ -16,9 +16,8 @@ pub struct App {
 	stop_recv: Arc<Mutex<tokio::sync::mpsc::Receiver<()>>>,
 }
 
-pub fn init() -> Result<()> {
+pub fn init() {
 	INS.set(App::new()).unwrap();
-	Ok(())
 }
 
 pub fn ins<'a>() -> &'a App {
