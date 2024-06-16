@@ -37,7 +37,8 @@ async fn run(
 	register_router: fn(app: axum::Router) -> axum::Router,
 	mut notice: Receiver<()>,
 ) -> Result<()> {
-	let app = axum::Router::new();
+	let app = axum::Router::new().fallback(handler_404);
+
 	let app = register_router(app);
 	let listener = tokio::net::TcpListener::bind(listen).await?;
 	axum::serve(listener, app)
@@ -46,6 +47,10 @@ async fn run(
 		})
 		.await?;
 	Ok(())
+}
+
+async fn handler_404() -> impl IntoResponse {
+	(StatusCode::NOT_FOUND, "not found")
 }
 
 #[derive(Debug)]
