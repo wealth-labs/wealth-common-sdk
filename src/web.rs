@@ -59,6 +59,13 @@ impl JsonResult {
 	pub fn new(code: u64, msg: Option<&str>, data: Value) -> Self {
 		Self { code, msg: msg.map(|msg| msg.to_owned()), data }
 	}
+
+	pub fn ok(data: Value) -> Self {
+		Self::new(0, None, data)
+	}
+	pub fn error(code: u64, msg: &str) -> Self {
+		Self::new(code, Some(msg), Value::Null)
+	}
 }
 
 impl Display for JsonResult {
