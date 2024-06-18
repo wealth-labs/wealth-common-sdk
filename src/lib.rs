@@ -23,6 +23,7 @@ pub use reqwest;
 pub use rust_decimal;
 pub use serde;
 pub use serde_json;
+pub use serde_with;
 pub use time;
 pub use tokio;
 pub use tracing;
