@@ -40,7 +40,6 @@ reqwest = { version = "0.12.4", default-features = false, features = [
 ] }
 nu-ansi-term = { version = "0.50.0", optional = true }
 axum = { version = "0.7.5", features = ["macros"], optional = true }
-serde_with = { version = "3.8.1", features = ["chrono"] }
 
 [features]
 default = []
