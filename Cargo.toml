@@ -39,12 +39,9 @@ reqwest = { version = "0.12.4", default-features = false, features = [
     "http2",
     "macos-system-configuration",
 ] }
-nu-ansi-term = { version = "0.50.0", optional = true }
 axum = { version = "0.7.5", features = ["macros"], optional = true }
-serde_with = { version = "3.8.1", features = ["chrono"] }
 
 [features]
 default = []
-debug = ["dep:nu-ansi-term"]
 database = ["dep:sea-orm", "dep:log"]
 web = ["dep:axum"]
