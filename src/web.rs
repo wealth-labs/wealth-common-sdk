@@ -49,8 +49,8 @@ async fn run(
 	Ok(())
 }
 
-async fn handler_404() -> impl IntoResponse {
-	(StatusCode::NOT_FOUND, "not found")
+async fn handler_404() -> Response {
+	JsonResult::error(404, "resource not found").into_response()
 }
 
 #[derive(Debug)]
