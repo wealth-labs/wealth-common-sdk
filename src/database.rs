@@ -7,12 +7,6 @@ use tokio::sync::RwLock;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-	pub drive: String,
-	pub hostname: String,
-	pub port: u16,
-	pub username: String,
-	pub password: String,
-	pub database: String,
 	pub url: String,
 	pub min_conn: u32,
 	pub max_conn: u32,
@@ -28,18 +22,7 @@ pub async fn ins(key: Option<&str>) -> DatabaseConnection {
 }
 
 pub async fn init(conf: &Config, key: Option<&str>) -> Result<()> {
-	let dns = format!(
-		"{}://{}:{}@{}:{}/{}{}",
-		conf.drive,
-		conf.username,
-		conf.password,
-		conf.hostname,
-		conf.port,
-		conf.database,
-		if conf.url.is_empty() { "".to_string() } else { format!("?{}", conf.url) },
-	);
-
-	let mut opts = ConnectOptions::new(dns);
+	let mut opts = ConnectOptions::new(conf.url.to_owned());
 	opts.min_connections(conf.min_conn);
 	opts.max_connections(conf.max_conn);
 	opts.sqlx_logging(conf.show_log);
