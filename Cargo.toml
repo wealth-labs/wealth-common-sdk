@@ -43,6 +43,6 @@ axum = { version = "0.7.5", features = ["macros"], optional = true }
 serde_with = { version = "3.8.1", features = ["chrono"] }
 
 [features]
-default = []
+default = ["database", "web"]
 database = ["dep:sea-orm", "dep:log"]
 web = ["dep:axum"]
