@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use anyhow::Result;
 use axum::{
 	response::{IntoResponse, Response},
@@ -8,13 +6,13 @@ use axum::{
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::fmt::Display;
 use tokio::sync::mpsc::{channel, Receiver};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
 	pub name: String,
 	pub listen: String,
-	pub show_log: bool,
 }
 
 pub async fn init(
@@ -50,36 +48,36 @@ async fn run(
 }
 
 async fn handler_404() -> Response {
-	JsonResult::error(404, "resource not found").into_response()
+	WebJsonResult::error(404, "resource not found").into_response()
 }
 
 #[derive(Debug)]
-pub struct JsonResult {
+pub struct WebJsonResult {
 	pub code: u64,
-	pub msg: Option<String>,
+	pub msg: String,
 	pub data: Value,
 }
 
-impl JsonResult {
-	pub fn new(code: u64, msg: Option<&str>, data: Value) -> Self {
-		Self { code, msg: msg.map(|msg| msg.to_owned()), data }
+impl WebJsonResult {
+	pub fn new(code: u64, msg: &str, data: Value) -> Self {
+		Self { code, msg: msg.to_owned(), data }
 	}
 
 	pub fn ok(data: Value) -> Self {
-		Self::new(0, None, data)
+		Self::new(0, "", data)
 	}
 	pub fn error(code: u64, msg: &str) -> Self {
-		Self::new(code, Some(msg), Value::Null)
+		Self::new(code, msg, Value::Null)
 	}
 }
 
-impl Display for JsonResult {
+impl Display for WebJsonResult {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "Code({}), Msg({:?}), data({:?})", self.code, self.msg, self.data)
 	}
 }
 
-impl IntoResponse for JsonResult {
+impl IntoResponse for WebJsonResult {
 	fn into_response(self) -> Response {
 		(
 			StatusCode::OK,
@@ -93,16 +91,18 @@ impl IntoResponse for JsonResult {
 	}
 }
 
-impl<E> From<E> for JsonResult
+impl<E> From<E> for WebJsonResult
 where
 	E: Into<anyhow::Error>,
 {
 	fn from(value: E) -> Self {
 		let err: anyhow::Error = value.into();
-		if let Ok(result) = err.downcast::<JsonResult>() {
+		let err_msg = err.to_string();
+		if let Ok(result) = err.downcast::<WebJsonResult>() {
 			result
 		} else {
-			Self::new(1, Some("server error"), Value::Null)
+			tracing::error!("{}", err_msg);
+			Self::new(500, "server error", Value::Null)
 		}
 	}
 }
