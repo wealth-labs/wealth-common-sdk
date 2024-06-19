@@ -106,3 +106,5 @@ where
 		}
 	}
 }
+
+pub type WebResponse = Result<WebJsonResult, WebJsonResult>;

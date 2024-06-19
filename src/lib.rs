@@ -17,15 +17,15 @@ pub use database::{init as database_init, ins as database_ins, Config as Databas
 pub use sea_orm::{self, sea_query::OnConflict as _, EntityTrait as _};
 
 #[cfg(feature = "web")]
-pub mod web;
+mod web;
 #[cfg(feature = "web")]
 pub use axum::{self, response::IntoResponse as _};
 #[cfg(feature = "web")]
-pub use web::{init as web_init, Config as WebConfig};
+pub use web::{init as web_init, Config as WebConfig, WebJsonResult, WebResponse};
 
 pub use anyhow::{self as _anyhow, anyhow, bail, ensure, Result};
 pub use async_trait::async_trait;
-pub use chrono::{self, DateTime, Duration};
+pub use chrono::{self, DateTime, Duration, FixedOffset, Utc};
 pub use once_cell::{self, sync::OnceCell};
 pub use reqwest;
 pub use rust_decimal::{self, Decimal};
