@@ -1,16 +1,16 @@
 #![allow(unused)]
 
-pub mod app;
+mod app;
 pub use app::{init as app_init, ins as app_ins, App};
 
-pub mod config;
+mod config;
 pub use config::init as config_init;
 
-pub mod logger;
-pub use logger::{init as log_init, Config as LogConfig};
+mod logger;
+pub use logger::{init as logger_init, Config as LoggerConfig};
 
 #[cfg(feature = "database")]
-pub mod database;
+mod database;
 #[cfg(feature = "database")]
 pub use database::{init as database_init, ins as database_ins, Config as DatabaseConfig};
 #[cfg(feature = "database")]
