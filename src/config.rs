@@ -6,12 +6,7 @@ where
 {
 	let mut settings = config::Config::builder()
 		.add_source(config::File::with_name(name.unwrap_or("config")).required(false))
-		.add_source(
-			config::Environment::with_prefix("APP")
-				.try_parsing(true)
-				.separator("_")
-				.list_separator(" "),
-		);
+		.add_source(config::Environment::with_prefix("APP").try_parsing(true).separator("_"));
 
 	if let Some(defaults) = defaults {
 		for (key, value) in defaults {
